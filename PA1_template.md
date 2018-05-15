@@ -6,54 +6,66 @@ This assignment makes use of data from a personal activity monitoring device. Th
 ## Loading and preprocessing the data
 
 ### Loading the data
-```{r load_data, echo=TRUE }
+
+```r
 original.df <- read.table(file="activity.csv", header=TRUE, sep=",", na.strings="NA", stringsAsFactors = FALSE)
 ```
 
 ### Preprocessing the data
 Converting "date" variable in the dataset to Date format.
-```{r preprocess_data, echo=TRUE}
+
+```r
 original.df$date <- as.Date(original.df$date, "%Y-%m-%d")
 ```
 
 ## What is mean total number of steps taken per day?
 Histogram of total number of steps taken each day
-```{r hist_total_steps_orignal_data, echo=TRUE}
+
+```r
 total.steps.df <- aggregate(x=original.df$steps, by=list(original.df$date), FUN=sum, na.rm=TRUE)
 hist(total.steps.df$x, main="Histogram of total steps taken each day", xlab="Total Steps")
 ```
 
+![plot of chunk hist_total_steps_orignal_data](figure/hist_total_steps_orignal_data-1.png)
+
 Mean and Median of total number of steps taken per day
-```{r mean_median_total_steps_original_data, echo=TRUE}
+
+```r
 mean.total.steps <- mean(total.steps.df$x)
 median.total.steps <- median(total.steps.df$x)
 ```
-Mean of total number of steps taken per day is `r mean.total.steps`.
+Mean of total number of steps taken per day is 9354.2295082.
 
-Median of total number of steps taken per day is `r median.total.steps`.
+Median of total number of steps taken per day is 10395.
 
 ## What is the average daily activity pattern?
 Time Series Plot
-```{r plot_average_steps_original_data, echo=TRUE}
+
+```r
 average.steps.df <- aggregate(x=original.df$steps, by=list(interval=original.df$interval), FUN=mean, na.rm=TRUE)
 plot(average.steps.df$interval, average.steps.df$x, type="l", main="Time Series Plot", xlab="5-Minute Interval", ylab="Average Number of Steps")
 ```
 
+![plot of chunk plot_average_steps_original_data](figure/plot_average_steps_original_data-1.png)
+
 Maximum Number of Steps
-```{r max_average_step, echo=TRUE}
+
+```r
 max.average.steps <- average.steps.df[which(average.steps.df$x==max(average.steps.df$x)),1]
 ```
-The "`r max.average.steps`" interval contains the maximum number of average steps.
+The "835" interval contains the maximum number of average steps.
 
 ## Imputing missing values
 Total Number of Missing Values
-```{r no_of_mising_values, echo=TRUE}
+
+```r
 total.na.rows <- nrow(subset(original.df, is.na(original.df$steps)))
 ```
-There are `r total.na.rows` rows with NAs.
+There are 2304 rows with NAs.
 
 Strategy for Filling Missing Values
-```{r impunding_strategy, echo=TRUE}
+
+```r
 temp.df <- merge(x=original.df, y=average.steps.df, by="interval", sort=FALSE)
 names(temp.df)[4] <- "average.steps"
 temp.df$steps <- ifelse(is.na(temp.df$steps), temp.df$average.steps, temp.df$steps)
@@ -61,38 +73,47 @@ temp.df$steps <- ifelse(is.na(temp.df$steps), temp.df$average.steps, temp.df$ste
 The missing values for steps variable are replaced by the mean for that 5-minute interval.
 
 New Dataset Without Missing Values
-```{r create_impunded_dataset, echo=TRUE}
+
+```r
 impuned.df <- temp.df[,c("steps", "date", "interval")]
 impuned.df <- impuned.df[order(impuned.df[,2], impuned.df[,3]), ]
 total.na.rows <- nrow(subset(impuned.df, is.na(impuned.df$steps)))
 ```
-Now there are `r total.na.rows` rows with NAs.
+Now there are 0 rows with NAs.
 
 Histogram of total number of steps taken each day after Imputation
-```{r hist_total_steps_impunded_data, echo=TRUE}
+
+```r
 total.steps.impuned.df <- aggregate(x=impuned.df$steps, by=list(impuned.df$date), FUN=sum, na.rm=TRUE)
 hist(total.steps.impuned.df$x, main="Histogram of total steps taken each day after Imputation", xlab="Total Steps")
 ```
 
+![plot of chunk hist_total_steps_impunded_data](figure/hist_total_steps_impunded_data-1.png)
+
 Mean and Median of total number of steps taken per day after Imputation
-```{r mean_median_total_steps_impunded_data, echo=TRUE}
+
+```r
 mean.total.steps <- mean(total.steps.impuned.df$x)
 median.total.steps <- median(total.steps.impuned.df$x)
 ```
-Mean of total number of steps taken per day after imputation is `r mean.total.steps`.
+Mean of total number of steps taken per day after imputation is 1.0766189 &times; 10<sup>4</sup>.
 
-Median of total number of steps taken per day after imputation is `r median.total.steps`.
+Median of total number of steps taken per day after imputation is 1.0766189 &times; 10<sup>4</sup>.
 
 The above values differ from the estimates from the first part of the assignment. After imputing the missing data, the mean and median has become equal.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 Creating New Factor Variable
-```{r add_day_type_factor, echo=TRUE}
+
+```r
 impuned.df$day.type <- as.factor(sapply(impuned.df$date, function(x) {if (weekdays(x) == "Saturday" | weekdays(x) == "Sunday") {"Weekend"} else {"Weekday"}}))
 ```
 
 Time Series Plot
-```{r plot_average_steps_by_day_type_impunded_data, echo=TRUE}
+
+```r
 average.steps.impuned.df <- aggregate(x=impuned.df$steps, by=list(day.type=impuned.df$day.type, interval=impuned.df$interval), FUN=mean, na.rm=TRUE)
 xyplot(average.steps.impuned.df$x ~ average.steps.impuned.df$interval | average.steps.impuned.df$day.type, type="l", xlab="Interval", ylab="Number of Steps", layout=c(1,2))
 ```
+
+![plot of chunk plot_average_steps_by_day_type_impunded_data](figure/plot_average_steps_by_day_type_impunded_data-1.png)
